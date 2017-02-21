@@ -1,7 +1,6 @@
 const {users} = require('../models')
 const passwordHash = require('password-hash')
 const express = require('express')
-const Crypto = require('crypto')
 const router = express.Router()
 
 router.get('/', (req, res, next)=>{
@@ -48,7 +47,7 @@ router.post('/create', (req, res, next)=>{
     if (user) {
       return res.sendStatus(409)
     } else {
-      const salt = Crypto.randomBytes(32).toString()
+      const salt = Math.random().toString(36).substr(2)
       const hash = passwordHash.generate(password + salt)
       users.create({
         username: username,

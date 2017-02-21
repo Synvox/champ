@@ -6,7 +6,7 @@ module.exports = function(sequelize, DataTypes) {
   }, {
     classMethods: {
       associate: function({msgs, users}) {
-        users.hasMany(msgs)
+        msgs.belongsTo(users)
       }
     }
   })

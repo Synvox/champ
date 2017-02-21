@@ -1,5 +1,6 @@
 const {users, msgs} = require('../models')
 const express = require('express')
+const ms = require('ms')
 const router = express()
 
 const clients = new Set()
@@ -19,15 +20,22 @@ router.get('/', (req, res, next)=>{
         $gt: lastEvent
       },
       createdAt: {
-        $gt: new Date()
+        $gt: new Date() - ms('1h')
       }
-    }
+    },
+    include: [users]
   }).then((foundMsgs)=>{
     const batch = foundMsgs.map((msg)=>{
+      let msgResponse = msg.toJSON()
+      msgResponse.user = {
+        username: msg.user.username,
+        email: msg.user.email
+      }
+
       return [
         'event: create',
-        `id: ${msg.id}`,
-        `data: ${JSON.stringify(msg)}`
+        `id: ${msgResponse.id}`,
+        `data: ${JSON.stringify(msgResponse)}`
       ].join('\n')
     }).join('\n\n') + '\n\n'
 
@@ -40,14 +48,22 @@ router.get('/', (req, res, next)=>{
 })
 
 msgs.addHook('afterCreate','stream',(msg)=>{
-  clients.forEach((res)=>{
-    const lines = [
-      'event: create',
-      `id: ${msg.id}`,
-      `data: ${JSON.stringify(msg)}`
-    ].join('\n') + '\n\n'
+  users.findById(msg.userId).then(user=>{
+    let msgResponse = msg.toJSON()
+    msgResponse.user = {
+      username: user.username,
+      email: user.email
+    }
 
-    res.write(lines)
+    clients.forEach((res)=>{
+      const lines = [
+        'event: create',
+        `id: ${msgResponse.id}`,
+        `data: ${JSON.stringify(msgResponse)}`
+      ].join('\n') + '\n\n'
+
+      res.write(lines)
+    })
   })
 })
 
