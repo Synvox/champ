@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <script>
+      var sse = new EventSource("/msgs")
+      sse.addEventListener('msg',(e)=>{
+        console.log(JSON.parse(e.data))
+      })
+    </script>
+  </body>
+</html>
