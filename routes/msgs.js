@@ -29,7 +29,6 @@ router.get('/', (req, res, next)=>{
         `id: ${msg.id}`,
         `data: ${JSON.stringify(msg)}`
       ].join('\n')
-
     }).join('\n\n') + '\n\n'
 
     res.write(batch)

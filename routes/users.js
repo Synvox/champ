@@ -1,11 +1,15 @@
 const {users} = require('../models')
 const passwordHash = require('password-hash')
 const express = require('express')
+const Crypto = require('crypto')
 const router = express.Router()
 
 router.get('/', (req, res, next)=>{
   if (req.user)
-    res.send(req.user)
+    res.send({
+      username: req.user.username,
+      email: req.user.email
+    })
   else res.sendStatus(401)
 })
 
@@ -15,14 +19,15 @@ router.post('/login', (req, res, next)=>{
       username: req.body.username || ''
     }
   }).then((user)=>{
-    if (user && passwordHash.verify(req.body.password, user.password)) {
+    if (user && passwordHash.verify(req.body.password + user.salt, user.password)) {
       res.cookie('userId', user.id, {signed: true})
+      delete user.dataValues.salt
       delete user.dataValues.password
       res.send(user.dataValues)
     } else {
       res.sendStatus(401)
     }
-  }).catch(e=>{console.log(e); res.sendStatus(500)})
+  }).catch(next)
 })
 
 router.post('/create', (req, res, next)=>{
@@ -43,18 +48,21 @@ router.post('/create', (req, res, next)=>{
     if (user) {
       return res.sendStatus(409)
     } else {
-      const hash = passwordHash.generate(password)
+      const salt = Crypto.randomBytes(32).toString()
+      const hash = passwordHash.generate(password + salt)
       users.create({
         username: username,
         password: hash,
-        email: email
+        email: email,
+        salt: salt
       }).then((user)=>{
         res.cookie('userId', user.id, {signed: true})
         delete user.dataValues.password
+        delete user.dataValues.salt
         res.send(user.dataValues)
-      }).catch(e=>{console.log(e); res.sendStatus(500)})
+      }).catch(next)
     }
-  }).catch(e=>{console.log(e); res.sendStatus(500)})
+  }).catch(next)
 })
 
 module.exports = router
