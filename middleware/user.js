@@ -7,7 +7,7 @@ module.exports = function(req, res, next){
       delete user.password
       req.user = user.dataValues
       next()
-    }).catch(e=>{console.log(e); res.sendStatus(500)})
+    }).catch(next)
   } else {
     next()
   }
