@@ -11,9 +11,7 @@ const env = require('./env.js')
 const app = express()
 
 app.enable('trust proxy')
-if (app.get('env') === 'development') {
-  app.use(cors({credentials: true, origin: true}))
-}
+app.use(cors({credentials: true, origin: true}))
 
 
 app.set('views', path.join(__dirname, 'views'))
